@@ -40,8 +40,8 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.PAT_TOKEN }}
       - run: |
-          docker build -t ghcr.io/dmehring-p532-spring2026/project2-backend:latest .
-          docker push ghcr.io/dmehring-p532-spring2026/project2-backend:latest
+          docker build -t ghcr.io/dmehring-p532-spring2026/project2-backend-part2:latest .
+          docker push ghcr.io/dmehring-p532-spring2026/project2-backend-part2:latest
 
   deploy:
     needs: build
