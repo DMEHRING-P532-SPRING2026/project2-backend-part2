@@ -16,6 +16,7 @@ public class OrderResponse {
     private Status status;
     private LocalDateTime createdAt;
     private LocalDateTime lastModifiedAt;
+    private LocalDateTime deadline;
 
     public Type getType() {
         return type;
@@ -87,5 +88,13 @@ public class OrderResponse {
 
     public void setId(long id) {
         this.id = id;
+    }
+
+    public LocalDateTime getDeadline() {
+        return deadline;
+    }
+
+    public void setDeadline(LocalDateTime deadline) {
+        this.deadline = deadline;
     }
 }

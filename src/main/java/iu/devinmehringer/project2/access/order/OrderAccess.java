@@ -28,11 +28,15 @@ public class OrderAccess {
                 .orElseThrow(() -> new OrderExceptions.OrderNotFoundException(id));
     }
 
-    public List<Order> getPendingOrdersByPriority(Priority priority) {
-        return orderRepository.findByStatusAndPriorityOrderByCreatedAtAsc(Status.PENDING, priority);
+    public List<Order> getPendingOrdersByType(Type type) {
+        return orderRepository.findByTypeOrderByCreatedAtAsc(type);
     }
 
     public List<Order> getPendingOrdersByPriorityAndType(Priority priority, Type type) {
         return orderRepository.findByStatusAndPriorityAndTypeOrderByCreatedAtAsc(Status.PENDING, priority, type);
+    }
+
+    public List<Order> getPendingOrdersByDeadlineAndType(Type type) {
+        return orderRepository.findByTypeOrderByDeadlineAsc(type);
     }
 }

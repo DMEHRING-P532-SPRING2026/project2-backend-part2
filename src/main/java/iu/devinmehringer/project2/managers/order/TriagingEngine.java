@@ -17,15 +17,22 @@ public class TriagingEngine {
         this.orderAccess = orderAccess;
     }
 
-    public class PriorityFirst implements TriageStrategy {
-        @Override
-        public List<Order> getSortedOrders() {
-            List<Order> orders = new ArrayList<>();
-            for (Priority priority : Priority.values()) {
-                orders.addAll(orderAccess.getPendingOrdersByPriority(priority));
+    public List<Order> getPending(TriageStrategyType strategyType, Type type) {
+        switch (strategyType) {
+            case LOAD_BALANCING -> {
+                return new LoadBalancing().getSortedOrders(type);
             }
-            return orders;
+            case DEADLINE_FIRST -> {
+                return new DeadlineFirst().getSortedOrders(type);
+            }
+            case PRIORITY_FIRST -> {
+                return new PriorityFirst().getSortedOrders(type);
+            }
         }
+        return new ArrayList<Order>();
+    }
+
+    private class PriorityFirst implements TriageStrategy {
 
         @Override
         public List<Order> getSortedOrders(Type type) {
@@ -37,5 +44,19 @@ public class TriagingEngine {
         }
     }
 
-    public TriageStrategy priorityFirst() { return new PriorityFirst(); }
+    private class LoadBalancing implements TriageStrategy {
+
+        @Override
+        public List<Order> getSortedOrders(Type type) {
+            return orderAccess.getPendingOrdersByType(type);
+        }
+    }
+
+    private class DeadlineFirst implements TriageStrategy {
+
+        @Override
+        public List<Order> getSortedOrders(Type type) {
+            return orderAccess.getPendingOrdersByDeadlineAndType(type);
+        }
+    }
 }

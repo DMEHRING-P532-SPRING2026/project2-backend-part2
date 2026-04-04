@@ -27,7 +27,6 @@ public class OrderManager implements Subject {
     private final List<Observer> observers;
     private final Handler commandPipeline;
     private final TriagingEngine triagingEngine;
-    private final TriageStrategy triageStrategy;
 
     public OrderManager(OrderFactory orderFactory, OrderAccess orderAccess, NotificationService notificationService,
                         CommandAccess commandAccess, TriagingEngine triagingEngine) {
@@ -35,7 +34,6 @@ public class OrderManager implements Subject {
         this.orderAccess = orderAccess;
         this.commandAccess = commandAccess;
         this.triagingEngine = triagingEngine;
-        this.triageStrategy = triagingEngine.priorityFirst(); // default
         observers = new ArrayList<>();
         addObserver(notificationService);
         commandPipeline = new ValidationHandler(
@@ -238,12 +236,9 @@ public class OrderManager implements Subject {
         return command.getOrder();
     }
 
-    public List<Order> getPendingOrders() {
-        return triageStrategy.getSortedOrders();
-    }
-
-    public List<Order> getPendingOrders(iu.devinmehringer.project2.model.order.Type type) {
-        return triageStrategy.getSortedOrders(type);
+    public List<Order> getPendingOrders(TriageStrategyType triageStrategy,
+                                        iu.devinmehringer.project2.model.order.Type type) {
+        return triagingEngine.getPending(triageStrategy, type);
     }
 
     public List<CommandRecord> getOrderCommands() {

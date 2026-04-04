@@ -8,6 +8,7 @@ import iu.devinmehringer.project2.model.command.CommandRecord;
 import iu.devinmehringer.project2.model.order.Order;
 import iu.devinmehringer.project2.model.order.Priority;
 import iu.devinmehringer.project2.model.order.Status;
+import iu.devinmehringer.project2.model.order.Type;
 import iu.devinmehringer.project2.utilities.NotificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,10 +38,6 @@ class OrderManagerTest {
 
     @BeforeEach
     void setUp() {
-        TriageStrategy mockStrategy = mock(TriageStrategy.class);
-        lenient().when(mockStrategy.getSortedOrders()).thenReturn(List.of());
-        lenient().when(mockStrategy.getSortedOrders(any())).thenReturn(List.of());
-        lenient().when(triagingEngine.priorityFirst()).thenReturn(mockStrategy);
         orderManager = new OrderManager(orderFactory, orderAccess, notificationService, commandAccess, triagingEngine);
 
         orderRequest = new OrderRequest();
@@ -232,17 +229,14 @@ class OrderManagerTest {
                 () -> orderManager.submitOrder(1L, orderRequest));
     }
 
-
     @Test
     void getPendingOrdersShouldReturnSortedOrders() {
         // Arrange
-        TriageStrategy mockStrategy = mock(TriageStrategy.class);
-        when(mockStrategy.getSortedOrders()).thenReturn(List.of(mockOrder));
-        when(triagingEngine.priorityFirst()).thenReturn(mockStrategy);
-        orderManager = new OrderManager(orderFactory, orderAccess, notificationService, commandAccess, triagingEngine);
+        when(triagingEngine.getPending(TriageStrategyType.PRIORITY_FIRST, Type.LAB))
+                .thenReturn(List.of(mockOrder));
 
         // Act
-        List<Order> result = orderManager.getPendingOrders();
+        List<Order> result = orderManager.getPendingOrders(TriageStrategyType.PRIORITY_FIRST, Type.LAB);
 
         // Assert
         assertNotNull(result);

@@ -24,6 +24,7 @@ public class Order {
     private String currentActor;
     private LocalDateTime createdAt;
     private LocalDateTime lastModifiedAt;
+    private LocalDateTime deadline;
 
     protected Order() {}
 
@@ -117,6 +118,14 @@ public class Order {
         this.currentActor = currentActor;
     }
 
+    public LocalDateTime getDeadline() {
+        return deadline;
+    }
+
+    public void setDeadline(LocalDateTime deadline) {
+        this.deadline = deadline;
+    }
+
     @Override
     public String toString() {
         return "Order{" +
@@ -129,7 +138,8 @@ public class Order {
                 ", status=" + status +
                 ", currentActor='" + currentActor + '\'' +
                 ", createdAt=" + createdAt +
-                ", lastModifiedAt =" + lastModifiedAt +
+                ", lastModifiedAt=" + lastModifiedAt +
+                ", deadline=" + deadline +
                 '}';
     }
 }

@@ -6,6 +6,5 @@ import iu.devinmehringer.project2.model.order.Type;
 import java.util.List;
 
 public interface TriageStrategy {
-    public List<Order> getSortedOrders();
     public List<Order> getSortedOrders(Type type);
 }

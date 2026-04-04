@@ -4,6 +4,8 @@ import iu.devinmehringer.project2.controller.dto.CommandResponse;
 import iu.devinmehringer.project2.controller.dto.OrderRequest;
 import iu.devinmehringer.project2.controller.dto.OrderResponse;
 import iu.devinmehringer.project2.managers.order.OrderManager;
+import iu.devinmehringer.project2.managers.order.TriageStrategy;
+import iu.devinmehringer.project2.managers.order.TriageStrategyType;
 import iu.devinmehringer.project2.model.command.CommandRecord;
 import iu.devinmehringer.project2.model.order.Order;
 import iu.devinmehringer.project2.model.order.Type;
@@ -31,6 +33,7 @@ public class OrderController {
             orderResponse.setStatus(order.getStatus());
             orderResponse.setCreatedAt(order.getCreatedAt());
             orderResponse.setLastModifiedAt(order.getLastModifiedAt());
+            orderResponse.setDeadline(order.getDeadline());
             return orderResponse;
         }
     }
@@ -83,10 +86,9 @@ public class OrderController {
 
     @GetMapping
     public ResponseEntity<List<OrderResponse>> getPendingOrders(
-            @RequestParam(required = false) Type type) {
-        List<Order> orders = (type != null)
-                ? orderManager.getPendingOrders(type)
-                : orderManager.getPendingOrders();
+            @RequestParam Type type,
+            @RequestParam(defaultValue = "PRIORITY_FIRST") TriageStrategyType strategy) {
+            List<Order> orders  = orderManager.getPendingOrders(strategy, type);
         return ResponseEntity.ok(orders.stream()
                 .map(OrderMapper::toDTO)
                 .collect(Collectors.toList()));
