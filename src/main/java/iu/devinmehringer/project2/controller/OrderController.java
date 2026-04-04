@@ -82,14 +82,6 @@ public class OrderController {
     }
 
     @GetMapping
-    public ResponseEntity<List<OrderResponse>> getPendingOrders() {
-        List<Order> orders = orderManager.getPendingOrders();
-        return ResponseEntity.ok(orders.stream()
-                .map(OrderMapper::toDTO)
-                .collect(Collectors.toList()));
-    }
-
-    @GetMapping
     public ResponseEntity<List<OrderResponse>> getPendingOrders(
             @RequestParam(required = false) Type type) {
         List<Order> orders = (type != null)

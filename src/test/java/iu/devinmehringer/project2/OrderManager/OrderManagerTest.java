@@ -37,7 +37,10 @@ class OrderManagerTest {
 
     @BeforeEach
     void setUp() {
-        when(triagingEngine.priorityFirst()).thenReturn(() -> List.of());
+        TriageStrategy mockStrategy = mock(TriageStrategy.class);
+        lenient().when(mockStrategy.getSortedOrders()).thenReturn(List.of());
+        lenient().when(mockStrategy.getSortedOrders(any())).thenReturn(List.of());
+        lenient().when(triagingEngine.priorityFirst()).thenReturn(mockStrategy);
         orderManager = new OrderManager(orderFactory, orderAccess, notificationService, commandAccess, triagingEngine);
 
         orderRequest = new OrderRequest();
@@ -233,7 +236,9 @@ class OrderManagerTest {
     @Test
     void getPendingOrdersShouldReturnSortedOrders() {
         // Arrange
-        when(triagingEngine.priorityFirst()).thenReturn(() -> List.of(mockOrder));
+        TriageStrategy mockStrategy = mock(TriageStrategy.class);
+        when(mockStrategy.getSortedOrders()).thenReturn(List.of(mockOrder));
+        when(triagingEngine.priorityFirst()).thenReturn(mockStrategy);
         orderManager = new OrderManager(orderFactory, orderAccess, notificationService, commandAccess, triagingEngine);
 
         // Act
