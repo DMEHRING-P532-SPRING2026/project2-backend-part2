@@ -7,6 +7,7 @@ import iu.devinmehringer.project2.controller.dto.OrderRequest;
 import iu.devinmehringer.project2.model.command.CommandRecord;
 import iu.devinmehringer.project2.model.command.Type;
 import iu.devinmehringer.project2.model.order.Order;
+import iu.devinmehringer.project2.model.order.Priority;
 import iu.devinmehringer.project2.model.order.Status;
 import iu.devinmehringer.project2.utilities.NotificationService;
 import iu.devinmehringer.project2.utilities.Observer;
@@ -158,6 +159,11 @@ public class OrderManager implements Subject {
                         orderRequest.getDescription(),
                         orderRequest.getPriority()
                 );
+                switch (this.order.getPriority()) {
+                    case STAT -> this.order.setDeadline(LocalDateTime.now().plusMinutes(30));
+                    case URGENT -> this.order.setDeadline(LocalDateTime.now().plusHours(5));
+                    case ROUTINE -> this.order.setDeadline(LocalDateTime.now().plusDays(7));
+                }
                 order.setLastModifiedAt(LocalDateTime.now());
                 orderAccess.saveOrder(order);
             }
