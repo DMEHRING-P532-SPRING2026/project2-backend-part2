@@ -242,10 +242,13 @@ public class OrderManager implements Subject {
         return triageStrategy.getSortedOrders();
     }
 
+    public List<Order> getPendingOrders(iu.devinmehringer.project2.model.order.Type type) {
+        return triageStrategy.getSortedOrders(type);
+    }
+
     public List<CommandRecord> getOrderCommands() {
         return commandAccess.getCommands();
     }
-
 
     public Order getOrderById(Long id) {
         return orderAccess.getOrderById(id);
@@ -265,4 +268,5 @@ public class OrderManager implements Subject {
     public void notifyObservers(OrderCommand command, String event) {
         observers.forEach(observer -> observer.update(command, event));
     }
+
 }

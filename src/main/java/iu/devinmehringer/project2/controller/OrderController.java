@@ -6,6 +6,7 @@ import iu.devinmehringer.project2.controller.dto.OrderResponse;
 import iu.devinmehringer.project2.managers.order.OrderManager;
 import iu.devinmehringer.project2.model.command.CommandRecord;
 import iu.devinmehringer.project2.model.order.Order;
+import iu.devinmehringer.project2.model.order.Type;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -83,6 +84,17 @@ public class OrderController {
     @GetMapping
     public ResponseEntity<List<OrderResponse>> getPendingOrders() {
         List<Order> orders = orderManager.getPendingOrders();
+        return ResponseEntity.ok(orders.stream()
+                .map(OrderMapper::toDTO)
+                .collect(Collectors.toList()));
+    }
+
+    @GetMapping
+    public ResponseEntity<List<OrderResponse>> getPendingOrders(
+            @RequestParam(required = false) Type type) {
+        List<Order> orders = (type != null)
+                ? orderManager.getPendingOrders(type)
+                : orderManager.getPendingOrders();
         return ResponseEntity.ok(orders.stream()
                 .map(OrderMapper::toDTO)
                 .collect(Collectors.toList()));

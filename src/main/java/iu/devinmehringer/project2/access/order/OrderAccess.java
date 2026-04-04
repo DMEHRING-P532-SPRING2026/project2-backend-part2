@@ -31,4 +31,8 @@ public class OrderAccess {
     public List<Order> getPendingOrdersByPriority(Priority priority) {
         return orderRepository.findByStatusAndPriorityOrderByCreatedAtAsc(Status.PENDING, priority);
     }
+
+    public List<Order> getPendingOrdersByPriorityAndType(Priority priority, Type type) {
+        return orderRepository.findByStatusAndPriorityAndTypeOrderByCreatedAtAsc(Status.PENDING, priority, type);
+    }
 }

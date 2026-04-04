@@ -20,4 +20,5 @@ public class CommandAccess {
     public List<CommandRecord> getCommands() {
         return commandRepository.findAll();
     }
+
 }
