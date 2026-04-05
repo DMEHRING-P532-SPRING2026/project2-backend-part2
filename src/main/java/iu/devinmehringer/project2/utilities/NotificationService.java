@@ -4,6 +4,6 @@ import iu.devinmehringer.project2.model.order.Order;
 import org.springframework.stereotype.Service;
 
 @Service
-public interface NotificationService extends Observer {
+public interface NotificationService extends Observer  {
     void notify(Order order, String event, String actor);
 }

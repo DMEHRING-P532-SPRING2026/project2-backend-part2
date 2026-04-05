@@ -9,9 +9,7 @@ import iu.devinmehringer.project2.model.command.Type;
 import iu.devinmehringer.project2.model.order.Order;
 import iu.devinmehringer.project2.model.order.Priority;
 import iu.devinmehringer.project2.model.order.Status;
-import iu.devinmehringer.project2.utilities.NotificationService;
-import iu.devinmehringer.project2.utilities.Observer;
-import iu.devinmehringer.project2.utilities.Subject;
+import iu.devinmehringer.project2.utilities.*;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -25,22 +23,22 @@ public class OrderManager implements Subject {
     private final OrderFactory orderFactory;
     private final OrderAccess orderAccess;
     private final CommandAccess commandAccess;
-    private final List<Observer> observers;
     private final Handler commandPipeline;
     private final TriagingEngine triagingEngine;
+    private final List<NotificationService> notifiers;
 
-    public OrderManager(OrderFactory orderFactory, OrderAccess orderAccess, NotificationService notificationService,
-                        CommandAccess commandAccess, TriagingEngine triagingEngine) {
+    public OrderManager(OrderFactory orderFactory, OrderAccess orderAccess,
+                        CommandAccess commandAccess, TriagingEngine triagingEngine,
+                        List<NotificationService> notifiers) {
         this.orderFactory = orderFactory;
         this.orderAccess = orderAccess;
         this.commandAccess = commandAccess;
         this.triagingEngine = triagingEngine;
-        observers = new ArrayList<>();
-        addObserver(notificationService);
+        this.notifiers = notifiers;
         commandPipeline = new ValidationHandler(
-                            new NotificationHandler(
-                                new CommandLoggerHandler(
-                                    new BaseHandler()
+                new NotificationHandler(
+                        new CommandLoggerHandler(
+                                new BaseHandler()
                         )));
     }
 
@@ -66,7 +64,7 @@ public class OrderManager implements Subject {
         @Override
         public void handle(OrderCommand command) {
             super.handle(command);
-            notifyObservers(command, command.getEvent());
+            notifyObservers(command, command.getEvent(), command.getPreferences());
         }
     }
 
@@ -168,6 +166,7 @@ public class OrderManager implements Subject {
                 orderAccess.saveOrder(order);
             }
         };
+        command.setPreferences(orderRequest.getPreferences());
         command.setEvent("Create Order");
         command.setActor(orderRequest.getActor());
         command.setType(Type.CREATE);
@@ -190,6 +189,7 @@ public class OrderManager implements Subject {
                 order.setLastModifiedAt(LocalDateTime.now());
             }
         };
+        command.setPreferences(orderRequest.getPreferences());
         command.setEvent("Claim Order");
         command.setActor(orderRequest.getActor());
         command.setType(Type.CLAIM);
@@ -212,6 +212,7 @@ public class OrderManager implements Subject {
                 order.setLastModifiedAt(LocalDateTime.now());
             }
         };
+        command.setPreferences(orderRequest.getPreferences());
         command.setEvent("Cancel Order");
         command.setActor(orderRequest.getActor());
         command.setType(Type.CANCEL);
@@ -234,6 +235,7 @@ public class OrderManager implements Subject {
                 order.setLastModifiedAt(LocalDateTime.now());
             }
         };
+        command.setPreferences(orderRequest.getPreferences());
         command.setEvent("Submit Order");
         command.setActor(orderRequest.getActor());
         command.setType(Type.SUBMIT);
@@ -256,18 +258,17 @@ public class OrderManager implements Subject {
     }
 
     @Override
-    public void addObserver(Observer observer) {
-        observers.add(observer);
-    }
+    public void addObserver(Observer observer) {}
 
     @Override
-    public void removeObserver(Observer observer) {
-        observers.remove(observer);
-    }
+    public void removeObserver(Observer observer) {}
 
     @Override
-    public void notifyObservers(OrderCommand command, String event) {
-        observers.forEach(observer -> observer.update(command, event));
+    public void notifyObservers(OrderCommand command, String event, NotificationPreferences preferences) {
+        if (preferences == null) return;
+        notifiers.stream()
+                .filter(n -> preferences.isEnabled(n.getClass()))
+                .forEach(n -> n.update(command, event));
     }
 
 }

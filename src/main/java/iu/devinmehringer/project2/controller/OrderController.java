@@ -60,12 +60,6 @@ public class OrderController {
                 .body(OrderMapper.toDTO(order));
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<OrderResponse> getOrder(@PathVariable Long id) {
-        Order order = orderManager.getOrderById(id);
-        return ResponseEntity.ok(OrderMapper.toDTO(order));
-    }
-
     @PostMapping("/{id}/claim")
     public ResponseEntity<OrderResponse> claimOrder(@PathVariable Long id, @RequestBody OrderRequest orderRequest) {
         Order order = orderManager.claimOrder(id, orderRequest);
@@ -81,6 +75,12 @@ public class OrderController {
     @PostMapping("/{id}/submit")
     public ResponseEntity<OrderResponse> submitOrder(@PathVariable Long id, @RequestBody OrderRequest orderRequest) {
         Order order = orderManager.submitOrder(id, orderRequest);
+        return ResponseEntity.ok(OrderMapper.toDTO(order));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<OrderResponse> getOrder(@PathVariable Long id) {
+        Order order = orderManager.getOrderById(id);
         return ResponseEntity.ok(OrderMapper.toDTO(order));
     }
 

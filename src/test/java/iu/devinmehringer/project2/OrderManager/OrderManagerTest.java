@@ -9,6 +9,8 @@ import iu.devinmehringer.project2.model.order.Order;
 import iu.devinmehringer.project2.model.order.Priority;
 import iu.devinmehringer.project2.model.order.Status;
 import iu.devinmehringer.project2.model.order.Type;
+import iu.devinmehringer.project2.utilities.ConsoleNotifier;
+import iu.devinmehringer.project2.utilities.NotificationPreferences;
 import iu.devinmehringer.project2.utilities.NotificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,16 +31,23 @@ class OrderManagerTest {
     @Mock private OrderFactory orderFactory;
     @Mock private OrderAccess orderAccess;
     @Mock private CommandAccess commandAccess;
-    @Mock private NotificationService notificationService;
+    @Mock private ConsoleNotifier notificationService;
     @Mock private TriagingEngine triagingEngine;
 
     private OrderManager orderManager;
     private OrderRequest orderRequest;
     private Order mockOrder;
+    private NotificationPreferences preferences;
 
     @BeforeEach
     void setUp() {
-        orderManager = new OrderManager(orderFactory, orderAccess, notificationService, commandAccess, triagingEngine);
+        orderManager = new OrderManager(orderFactory, orderAccess, commandAccess, triagingEngine,
+                List.of(notificationService));
+
+        preferences = new NotificationPreferences();
+        preferences.setConsole(true);
+        preferences.setInApp(true);
+        preferences.setEmail(true);
 
         orderRequest = new OrderRequest();
         orderRequest.setType(iu.devinmehringer.project2.model.order.Type.LAB);
@@ -47,6 +56,7 @@ class OrderManagerTest {
         orderRequest.setDescription("Blood panel");
         orderRequest.setPriority(Priority.STAT);
         orderRequest.setActor("Alice Smith");
+        orderRequest.setPreferences(preferences);
 
         mockOrder = new Order(
                 iu.devinmehringer.project2.model.order.Type.LAB,
@@ -99,6 +109,24 @@ class OrderManagerTest {
     }
 
     @Test
+    void createOrderShouldNotNotifyWhenPreferencesAllFalse() {
+        // Arrange
+        NotificationPreferences noPrefs = new NotificationPreferences();
+        noPrefs.setConsole(false);
+        noPrefs.setInApp(false);
+        noPrefs.setEmail(false);
+        orderRequest.setPreferences(noPrefs);
+
+        when(orderFactory.create(any(), any(), any(), any(), any())).thenReturn(mockOrder);
+
+        // Act
+        orderManager.createOrder(orderRequest);
+
+        // Assert
+        verify(notificationService, never()).update(any(), any());
+    }
+
+    @Test
     void claimOrderShouldSetStatusToInProgress() {
         // Arrange
         mockOrder.setStatus(Status.PENDING);
@@ -145,7 +173,6 @@ class OrderManagerTest {
         assertThrows(OrderExceptions.OrderClaimException.class,
                 () -> orderManager.claimOrder(1L, orderRequest));
     }
-
 
     @Test
     void cancelOrderShouldSetStatusToCancelled() {
@@ -242,7 +269,6 @@ class OrderManagerTest {
         assertNotNull(result);
         assertFalse(result.isEmpty());
     }
-
 
     @Test
     void getOrderByIdShouldReturnOrder() {

@@ -2,6 +2,7 @@ package iu.devinmehringer.project2.managers.order;
 
 import iu.devinmehringer.project2.model.command.Type;
 import iu.devinmehringer.project2.model.order.Order;
+import iu.devinmehringer.project2.utilities.NotificationPreferences;
 
 public class OrderCommand implements Command {
     protected Order order;
@@ -9,6 +10,7 @@ public class OrderCommand implements Command {
     protected Long id;
     protected String event;
     protected String actor;
+    protected NotificationPreferences preferences;
 
     public Order getOrder() {
         return order;
@@ -48,6 +50,14 @@ public class OrderCommand implements Command {
 
     public void setActor(String actor) {
         this.actor = actor;
+    }
+
+    public NotificationPreferences getPreferences() {
+        return preferences;
+    }
+
+    public void setPreferences(NotificationPreferences preferences) {
+        this.preferences = preferences;
     }
 
     @Override
