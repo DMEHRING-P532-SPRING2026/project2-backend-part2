@@ -17,14 +17,16 @@ public class CommandRecord {
     @Column(name = "order_id")
     private Long orderId;
     private String actor;
+    private String other;
 
     protected CommandRecord() {}
 
-    public CommandRecord(Type type, Long orderId, String actor) {
+    public CommandRecord(Type type, Long orderId, String actor, String other) {
         this.type = type;
         this.orderId = orderId;
         this.actor = actor;
         this.executedAt = LocalDateTime.now();
+        this.other = other;
     }
 
     public Long getId() {
@@ -65,5 +67,13 @@ public class CommandRecord {
 
     public void setActor(String actor) {
         this.actor = actor;
+    }
+
+    public String getOther() {
+        return other;
+    }
+
+    public void setOther(String other) {
+        this.other = other;
     }
 }

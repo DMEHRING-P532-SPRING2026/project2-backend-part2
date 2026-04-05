@@ -5,8 +5,10 @@ import iu.devinmehringer.project2.model.order.Order;
 import iu.devinmehringer.project2.model.order.Priority;
 import iu.devinmehringer.project2.model.order.Status;
 import iu.devinmehringer.project2.model.order.Type;
+import org.aspectj.weaver.ast.Or;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -39,4 +41,9 @@ public class OrderAccess {
     public List<Order> getPendingOrdersByDeadlineAndType(Type type) {
         return orderRepository.findByTypeOrderByDeadlineAsc(type);
     }
+
+    public List<Order> getRecentStatOrders(Type type, LocalDateTime since) {
+        return orderRepository.findByCreatedAtAfterAndPriorityAndType(since, Priority.STAT, type);
+    }
+
 }

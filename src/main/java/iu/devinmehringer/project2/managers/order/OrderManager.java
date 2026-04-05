@@ -36,10 +36,11 @@ public class OrderManager implements Subject {
         this.triagingEngine = triagingEngine;
         this.notifiers = notifiers;
         commandPipeline = new ValidationHandler(
-                new NotificationHandler(
-                        new CommandLoggerHandler(
-                                new BaseHandler()
-                        )));
+                                new PriorityEscalationHandler(
+                                        new NotificationHandler(
+                                                new CommandLoggerHandler(
+                                                        new BaseHandler()
+                                                ))));
     }
 
     /**
@@ -80,15 +81,47 @@ public class OrderManager implements Subject {
         @Override
         public void handle(OrderCommand command) {
             super.handle(command);
-            if (command.getType().equals(Type.CREATE)) {
-                commandAccess.saveCommand(new CommandRecord(command.getType(), command.getOrder().getId(),
-                        command.getOrder().getClinician()));
-            } else {
-                commandAccess.saveCommand(new CommandRecord(command.getType(), command.getOrder().getId(),
-                        command.getActor()));
+            Order order = command.getOrder();
+            String actor = command.getType().equals(Type.CREATE) ? order.getClinician() : command.getActor();
+            String other = order.getPriority() == Priority.STAT
+                    ? String.format("STAT AUDIT | Patient: %s | Type: %s", order.getPatient(), order.getType())
+                    : null;
+
+            commandAccess.saveCommand(new CommandRecord(command.getType(), order.getId(), actor, other));
+        }
+    }
+
+    /**
+     * Escalate Orders
+     */
+    private class PriorityEscalationHandler extends HandlerDecorator {
+
+        public PriorityEscalationHandler(Handler handler) {
+            super(handler);
+        }
+
+        @Override
+        public void handle(OrderCommand command) {
+            super.handle(command);
+
+            if (!command.getType().equals(Type.CREATE)) return;
+
+            Order order = command.getOrder();
+
+            if (order.getPriority() != Priority.URGENT) return;
+
+            List<Order> recentStats = orderAccess.getRecentStatOrders(order.getType(),
+                    LocalDateTime.now().minusMinutes(5));
+
+            if (!recentStats.isEmpty()) {
+                order.setPriority(Priority.STAT);
+                order.setDeadline(LocalDateTime.now().plusMinutes(30));
+                orderAccess.saveOrder(order);
             }
         }
     }
+
+
 
     /**
      * Validation Handler - validate request
