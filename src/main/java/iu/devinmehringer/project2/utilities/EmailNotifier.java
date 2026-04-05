@@ -8,8 +8,8 @@ import org.springframework.stereotype.Component;
 public class EmailNotifier implements NotificationService {
     @Override
     public void notify(Order order, String event, String actor) {
-        System.out.println(actor +
-                "@example.com\n Your order: " + order.toString() + "has been processed for event: " + event);
+        System.out.println(actor.split(" ")[0] +
+                "@example.com: Your order: " + order.toString() + " has been processed for event: " + event);
     }
 
     @Override
