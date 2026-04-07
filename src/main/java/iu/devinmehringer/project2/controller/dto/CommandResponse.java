@@ -1,13 +1,15 @@
 package iu.devinmehringer.project2.controller.dto;
 
-import iu.devinmehringer.project2.model.command.Type;
+import iu.devinmehringer.project2.model.command.CommandType;
+import iu.devinmehringer.project2.model.staff.Staff;
+
 import java.time.LocalDateTime;
 
 public class CommandResponse {
     private LocalDateTime executedAt;
-    private Type type;
+    private CommandType commandType;
     private Long orderId;
-    private String actor;
+    private Staff staff;
 
     public LocalDateTime getExecutedAt() {
         return executedAt;
@@ -17,12 +19,12 @@ public class CommandResponse {
         this.executedAt = executedAt;
     }
 
-    public Type getType() {
-        return type;
+    public CommandType getType() {
+        return commandType;
     }
 
-    public void setType(Type type) {
-        this.type = type;
+    public void setType(CommandType commandType) {
+        this.commandType = commandType;
     }
 
     public Long getOrderId() {
@@ -33,11 +35,19 @@ public class CommandResponse {
         this.orderId = orderId;
     }
 
-    public String getActor() {
-        return actor;
+    public CommandType getCommandType() {
+        return commandType;
     }
 
-    public void setActor(String actor) {
-        this.actor = actor;
+    public void setCommandType(CommandType commandType) {
+        this.commandType = commandType;
+    }
+
+    public Staff getStaff() {
+        return staff;
+    }
+
+    public void setStaff(Staff staff) {
+        this.staff = staff;
     }
 }

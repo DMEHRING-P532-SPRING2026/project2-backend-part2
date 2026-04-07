@@ -2,13 +2,13 @@ package iu.devinmehringer.project2.controller.dto;
 
 import iu.devinmehringer.project2.model.order.Priority;
 import iu.devinmehringer.project2.model.order.Status;
-import iu.devinmehringer.project2.model.order.Type;
+import iu.devinmehringer.project2.model.order.OrderType;
 
 import java.time.LocalDateTime;
 
 public class OrderResponse {
     private long id;
-    private Type type;
+    private OrderType orderType;
     private String patient;
     private String clinician;
     private String description;
@@ -18,12 +18,12 @@ public class OrderResponse {
     private LocalDateTime lastModifiedAt;
     private LocalDateTime deadline;
 
-    public Type getType() {
-        return type;
+    public OrderType getType() {
+        return orderType;
     }
 
-    public void setType(Type type) {
-        this.type = type;
+    public void setType(OrderType orderType) {
+        this.orderType = orderType;
     }
 
     public String getPatient() {

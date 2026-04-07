@@ -2,18 +2,21 @@ package iu.devinmehringer.project2.managers.order;
 
 import iu.devinmehringer.project2.access.command.CommandAccess;
 import iu.devinmehringer.project2.access.order.OrderAccess;
+import iu.devinmehringer.project2.access.staff.StaffAccess;
 import iu.devinmehringer.project2.controller.OrderExceptions;
 import iu.devinmehringer.project2.controller.dto.OrderRequest;
 import iu.devinmehringer.project2.model.command.CommandRecord;
-import iu.devinmehringer.project2.model.command.Type;
+import iu.devinmehringer.project2.model.command.CommandType;
 import iu.devinmehringer.project2.model.order.Order;
+import iu.devinmehringer.project2.model.order.OrderType;
 import iu.devinmehringer.project2.model.order.Priority;
 import iu.devinmehringer.project2.model.order.Status;
+import iu.devinmehringer.project2.model.staff.Staff;
+import iu.devinmehringer.project2.model.staff.StaffType;
 import iu.devinmehringer.project2.utilities.*;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 
@@ -22,16 +25,18 @@ public class OrderManager implements Subject {
 
     private final OrderFactory orderFactory;
     private final OrderAccess orderAccess;
+    private final StaffAccess staffAccess;
     private final CommandAccess commandAccess;
     private final Handler commandPipeline;
     private final TriagingEngine triagingEngine;
     private final List<NotificationService> notifiers;
 
-    public OrderManager(OrderFactory orderFactory, OrderAccess orderAccess,
+    public OrderManager(OrderFactory orderFactory, OrderAccess orderAccess, StaffAccess staffAccess,
                         CommandAccess commandAccess, TriagingEngine triagingEngine,
                         List<NotificationService> notifiers) {
         this.orderFactory = orderFactory;
         this.orderAccess = orderAccess;
+        this.staffAccess = staffAccess;
         this.commandAccess = commandAccess;
         this.triagingEngine = triagingEngine;
         this.notifiers = notifiers;
@@ -82,12 +87,11 @@ public class OrderManager implements Subject {
         public void handle(OrderCommand command) {
             super.handle(command);
             Order order = command.getOrder();
-            String actor = command.getType().equals(Type.CREATE) ? order.getClinician() : command.getActor();
             String other = order.getPriority() == Priority.STAT
-                    ? String.format("STAT AUDIT | Patient: %s | Type: %s", order.getPatient(), order.getType())
+                    ? String.format("STAT AUDIT | Patient: %s | CommandType: %s", order.getPatient(), order.getType())
                     : null;
 
-            commandAccess.saveCommand(new CommandRecord(command.getType(), order.getId(), actor, other));
+            commandAccess.saveCommand(new CommandRecord(command.getType(), order.getId(), command.getStaff(), other));
         }
     }
 
@@ -104,7 +108,7 @@ public class OrderManager implements Subject {
         public void handle(OrderCommand command) {
             super.handle(command);
 
-            if (!command.getType().equals(Type.CREATE)) return;
+            if (!command.getType().equals(CommandType.CREATE)) return;
 
             Order order = command.getOrder();
 
@@ -132,10 +136,17 @@ public class OrderManager implements Subject {
             super(handler);
         }
 
+        private void validateRequester(List<Staff> orderStaff, Staff requester) {
+            if (!orderStaff.contains(requester)) {
+                throw new OrderExceptions.OrderStaffNotSameAsRequesterException(requester.getId());
+            }
+        }
+
         private void claimCheck(OrderCommand command) {
             Order order = orderAccess.getOrderById(command.getId());
             command.setOrder(order);
             command.setId(order.getId());
+            validateRequester(order.getStaff(), command.getStaff());
             if (!command.getOrder().getStatus().equals(Status.PENDING)) {
                 throw new OrderExceptions.OrderClaimException(command.getId());
             }
@@ -145,6 +156,13 @@ public class OrderManager implements Subject {
             Order order = orderAccess.getOrderById(command.getId());
             command.setOrder(order);
             command.setId(order.getId());
+            validateRequester(order.getStaff(), command.getStaff());
+            // Must be in the order staff at this point but if requester is not a clinician
+            // then must not be the creator since order has one clinician (in this model)
+            if (!command.getStaff().getType().equals(StaffType.CLINICIAN)) {
+                throw new OrderExceptions.NonOwnerClinicianCancelOrderException(command.getStaffId());
+            }
+
             if (!command.getOrder().getStatus().equals(Status.PENDING)) {
                 throw new OrderExceptions.OrderCancelException(command.getId());
             }
@@ -154,21 +172,32 @@ public class OrderManager implements Subject {
             Order order = orderAccess.getOrderById(command.getId());
             command.setOrder(order);
             command.setId(order.getId());
+            validateRequester(order.getStaff(), command.getStaff());
             if (!command.getOrder().getStatus().equals(Status.IN_PROGRESS)) {
                 throw new OrderExceptions.OrderSubmitException(command.getId());
             }
-            // If you're not the actor we have on the order you can't submit it
-            if (!command.getActor().equals(order.getCurrentActor())) {
-                throw new OrderExceptions.OrderActorException(command.getId());
+        }
+
+        private void createCheck(OrderCommand command) {
+            if (!command.getStaff().getType().equals(StaffType.CLINICIAN)) {
+                throw new OrderExceptions.NonClinicianCreateOrderException(command.getStaffId());
             }
         }
 
         @Override
         public void handle(OrderCommand command) {
+            // First check if the staff exists
+            Staff staff = staffAccess.getStaffFromID(command.getStaffId());
+            if (staff != null) {
+                command.setStaff(staff);
+            } else {
+                throw new OrderExceptions.UnknownStaffException(command.getStaffId());
+            }
             switch (command.getType()) {
                 case CANCEL -> cancelCheck(command);
                 case CLAIM -> claimCheck(command);
                 case SUBMIT -> submitCheck(command);
+                case CREATE -> createCheck(command);
             }
             super.handle(command);
         }
@@ -183,10 +212,12 @@ public class OrderManager implements Subject {
         OrderCommand command = new OrderCommand() {
             @Override
             public void execute() {
+                Staff staff = staffAccess.getStaffFromID(orderRequest.getStaffId());
+
                 this.order = orderFactory.create(
                         orderRequest.getType(),
                         orderRequest.getPatient(),
-                        orderRequest.getClinician(),
+                        staff,
                         orderRequest.getDescription(),
                         orderRequest.getPriority()
                 );
@@ -199,10 +230,10 @@ public class OrderManager implements Subject {
                 orderAccess.saveOrder(order);
             }
         };
+        command.setStaffId(orderRequest.getStaffId());
         command.setPreferences(orderRequest.getPreferences());
         command.setEvent("Create Order");
-        command.setActor(orderRequest.getActor());
-        command.setType(Type.CREATE);
+        command.setType(CommandType.CREATE);
         commandPipeline.handle(command);
         return command.getOrder();
     }
@@ -217,15 +248,16 @@ public class OrderManager implements Subject {
         OrderCommand command = new OrderCommand() {
             @Override
             public void execute() {
-                this.order.setCurrentActor(orderRequest.getActor());
+                Staff staff = staffAccess.getStaffFromID(orderRequest.getStaffId());
+                this.order.addStaff(staff);
                 this.order.setStatus(Status.IN_PROGRESS);
                 order.setLastModifiedAt(LocalDateTime.now());
             }
         };
+        command.setStaffId(orderRequest.getStaffId());
         command.setPreferences(orderRequest.getPreferences());
         command.setEvent("Claim Order");
-        command.setActor(orderRequest.getActor());
-        command.setType(Type.CLAIM);
+        command.setType(CommandType.CLAIM);
         command.setId(id);
         commandPipeline.handle(command);
         return command.getOrder();
@@ -245,10 +277,10 @@ public class OrderManager implements Subject {
                 order.setLastModifiedAt(LocalDateTime.now());
             }
         };
+        command.setStaffId(orderRequest.getStaffId());
         command.setPreferences(orderRequest.getPreferences());
         command.setEvent("Cancel Order");
-        command.setActor(orderRequest.getActor());
-        command.setType(Type.CANCEL);
+        command.setType(CommandType.CANCEL);
         command.setId(id);
         commandPipeline.handle(command);
         return command.getOrder();
@@ -268,18 +300,18 @@ public class OrderManager implements Subject {
                 order.setLastModifiedAt(LocalDateTime.now());
             }
         };
+        command.setStaffId(orderRequest.getStaffId());
         command.setPreferences(orderRequest.getPreferences());
         command.setEvent("Submit Order");
-        command.setActor(orderRequest.getActor());
-        command.setType(Type.SUBMIT);
+        command.setType(CommandType.SUBMIT);
         command.setId(id);
         commandPipeline.handle(command);
         return command.getOrder();
     }
 
     public List<Order> getPendingOrders(TriageStrategyType triageStrategy,
-                                        iu.devinmehringer.project2.model.order.Type type) {
-        return triagingEngine.getPending(triageStrategy, type);
+                                        OrderType orderType) {
+        return triagingEngine.getPending(triageStrategy, orderType);
     }
 
     public List<CommandRecord> getOrderCommands() {

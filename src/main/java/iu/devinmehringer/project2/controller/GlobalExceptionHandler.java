@@ -18,27 +18,42 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<String> handleBadRequest(HttpMessageNotReadableException e) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid request body");
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
     }
 
     @ExceptionHandler(OrderExceptions.OrderClaimException.class)
     public ResponseEntity<String> handleOrderClaimException(OrderExceptions.OrderClaimException e) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body("Order can't be claimed");
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
     }
 
     @ExceptionHandler(OrderExceptions.OrderCancelException.class)
     public ResponseEntity<String> handleOrderCancelException(OrderExceptions.OrderCancelException e) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body("Order can't be canceled");
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
     }
 
     @ExceptionHandler(OrderExceptions.OrderSubmitException.class)
     public ResponseEntity<String> handleOrderSubmitException(OrderExceptions.OrderSubmitException e) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body("Order can't be submitted");
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
     }
 
-    @ExceptionHandler(OrderExceptions.OrderActorException.class)
-    public ResponseEntity<String> handleOrderActorException(OrderExceptions.OrderActorException e) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body("Requester not same as order actor");
+    @ExceptionHandler(OrderExceptions.OrderStaffNotSameAsRequesterException.class)
+    public ResponseEntity<String> handleOrderActorException(OrderExceptions.OrderStaffNotSameAsRequesterException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+    }
+
+    @ExceptionHandler(OrderExceptions.UnknownStaffException.class)
+    public ResponseEntity<String> handleUnknownStaffException(OrderExceptions.UnknownStaffException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+    }
+
+    @ExceptionHandler(OrderExceptions.NonClinicianCreateOrderException.class)
+    public ResponseEntity<String> handleNonClinicianCreateOrderException(OrderExceptions.NonClinicianCreateOrderException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+    }
+
+    @ExceptionHandler(OrderExceptions.NonOwnerClinicianCancelOrderException.class)
+    public ResponseEntity<String> handleNonOwnerClinicianCancelOrderException(OrderExceptions.NonOwnerClinicianCancelOrderException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
     }
 
     @ExceptionHandler(NoResourceFoundException.class)

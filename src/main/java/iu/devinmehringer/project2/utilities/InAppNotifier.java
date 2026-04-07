@@ -15,12 +15,13 @@ public class InAppNotifier implements NotificationService {
     }
 
     @Override
-    public void notify(Order order, String event, String actor) {
-        badgeController.pushBadgeUpdate(order, event, actor);
+    public void notify(Order order, String event) {
+        // TODO this code is cooked
+        //badgeController.pushBadgeUpdate(order, event, actor);
     }
 
     @Override
     public void update(OrderCommand command, String event) {
-        this.notify(command.getOrder(), event, command.getActor());
+        this.notify(command.getOrder(), event);
     }
 }

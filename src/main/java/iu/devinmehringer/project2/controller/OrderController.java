@@ -4,11 +4,10 @@ import iu.devinmehringer.project2.controller.dto.CommandResponse;
 import iu.devinmehringer.project2.controller.dto.OrderRequest;
 import iu.devinmehringer.project2.controller.dto.OrderResponse;
 import iu.devinmehringer.project2.managers.order.OrderManager;
-import iu.devinmehringer.project2.managers.order.TriageStrategy;
 import iu.devinmehringer.project2.managers.order.TriageStrategyType;
 import iu.devinmehringer.project2.model.command.CommandRecord;
 import iu.devinmehringer.project2.model.order.Order;
-import iu.devinmehringer.project2.model.order.Type;
+import iu.devinmehringer.project2.model.order.OrderType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,7 +26,6 @@ public class OrderController {
             orderResponse.setId(order.getId());
             orderResponse.setType(order.getType());
             orderResponse.setPatient(order.getPatient());
-            orderResponse.setClinician(order.getClinician());
             orderResponse.setDescription(order.getDescription());
             orderResponse.setPriority(order.getPriority());
             orderResponse.setStatus(order.getStatus());
@@ -42,7 +40,7 @@ public class OrderController {
         public static CommandResponse toDTO(CommandRecord commandRecord) {
             CommandResponse commandResponse = new CommandResponse();
             commandResponse.setOrderId(commandRecord.getOrderId());
-            commandResponse.setActor(commandRecord.getActor());
+            commandResponse.setStaff(commandResponse.getStaff());
             commandResponse.setType(commandRecord.getType());
             commandResponse.setExecutedAt(commandRecord.getExecutedAt());
             return commandResponse;
@@ -86,9 +84,9 @@ public class OrderController {
 
     @GetMapping
     public ResponseEntity<List<OrderResponse>> getPendingOrders(
-            @RequestParam Type type,
+            @RequestParam OrderType orderType,
             @RequestParam(defaultValue = "PRIORITY_FIRST") TriageStrategyType strategy) {
-            List<Order> orders  = orderManager.getPendingOrders(strategy, type);
+            List<Order> orders  = orderManager.getPendingOrders(strategy, orderType);
         return ResponseEntity.ok(orders.stream()
                 .map(OrderMapper::toDTO)
                 .collect(Collectors.toList()));

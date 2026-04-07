@@ -1,38 +1,29 @@
 package iu.devinmehringer.project2.controller.dto;
 
 import iu.devinmehringer.project2.model.order.Priority;
-import iu.devinmehringer.project2.model.order.Type;
+import iu.devinmehringer.project2.model.order.OrderType;
 import iu.devinmehringer.project2.utilities.NotificationPreferences;
 
 public class OrderRequest {
-    private Type type;
+    private OrderType orderType;
     private String patient;
-    private String clinician;
     private String description;
     private Priority priority;
-    private String actor;
+    private Long staffId;
     private NotificationPreferences preferences;
 
-    public Type getType() {
-        return type;
+    public OrderType getType() {
+        return orderType;
     }
 
-    public void setType(Type type) {
-        this.type = type;
+    public void setType(OrderType orderType) {
+        this.orderType = orderType;
     }
 
     public String getPatient() { return patient; }
 
     public void setPatient(String patient) {
         this.patient = patient;
-    }
-
-    public String getClinician() {
-        return clinician;
-    }
-
-    public void setClinician(String clinician) {
-        this.clinician = clinician;
     }
 
     public String getDescription() {
@@ -49,19 +40,27 @@ public class OrderRequest {
         this.priority = priority;
     }
 
-    public String getActor() {
-        return actor;
-    }
-
-    public void setActor(String actor) {
-        this.actor = actor;
-    }
-
     public NotificationPreferences getPreferences() {
         return preferences;
     }
 
     public void setPreferences(NotificationPreferences preferences) {
         this.preferences = preferences;
+    }
+
+    public OrderType getOrderType() {
+        return orderType;
+    }
+
+    public void setOrderType(OrderType orderType) {
+        this.orderType = orderType;
+    }
+
+    public Long getStaffId() {
+        return staffId;
+    }
+
+    public void setStaffId(Long staffId) {
+        this.staffId = staffId;
     }
 }

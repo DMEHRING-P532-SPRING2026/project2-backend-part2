@@ -8,10 +8,9 @@ import iu.devinmehringer.project2.model.command.CommandRecord;
 import iu.devinmehringer.project2.model.order.Order;
 import iu.devinmehringer.project2.model.order.Priority;
 import iu.devinmehringer.project2.model.order.Status;
-import iu.devinmehringer.project2.model.order.Type;
+import iu.devinmehringer.project2.model.order.OrderType;
 import iu.devinmehringer.project2.utilities.ConsoleNotifier;
 import iu.devinmehringer.project2.utilities.NotificationPreferences;
-import iu.devinmehringer.project2.utilities.NotificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -50,7 +49,7 @@ class OrderManagerTest {
         preferences.setEmail(true);
 
         orderRequest = new OrderRequest();
-        orderRequest.setType(iu.devinmehringer.project2.model.order.Type.LAB);
+        orderRequest.setType(OrderType.LAB);
         orderRequest.setPatient("John Doe");
         orderRequest.setClinician("Alice Smith");
         orderRequest.setDescription("Blood panel");
@@ -59,7 +58,7 @@ class OrderManagerTest {
         orderRequest.setPreferences(preferences);
 
         mockOrder = new Order(
-                iu.devinmehringer.project2.model.order.Type.LAB,
+                OrderType.LAB,
                 "John Doe",
                 "Alice Smith",
                 "Blood panel",
@@ -259,11 +258,11 @@ class OrderManagerTest {
     @Test
     void getPendingOrdersShouldReturnSortedOrders() {
         // Arrange
-        when(triagingEngine.getPending(TriageStrategyType.PRIORITY_FIRST, Type.LAB))
+        when(triagingEngine.getPending(TriageStrategyType.PRIORITY_FIRST, OrderType.LAB))
                 .thenReturn(List.of(mockOrder));
 
         // Act
-        List<Order> result = orderManager.getPendingOrders(TriageStrategyType.PRIORITY_FIRST, Type.LAB);
+        List<Order> result = orderManager.getPendingOrders(TriageStrategyType.PRIORITY_FIRST, OrderType.LAB);
 
         // Assert
         assertNotNull(result);

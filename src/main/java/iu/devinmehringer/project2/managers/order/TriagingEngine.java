@@ -3,7 +3,7 @@ package iu.devinmehringer.project2.managers.order;
 import iu.devinmehringer.project2.access.order.OrderAccess;
 import iu.devinmehringer.project2.model.order.Order;
 import iu.devinmehringer.project2.model.order.Priority;
-import iu.devinmehringer.project2.model.order.Type;
+import iu.devinmehringer.project2.model.order.OrderType;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -17,16 +17,16 @@ public class TriagingEngine {
         this.orderAccess = orderAccess;
     }
 
-    public List<Order> getPending(TriageStrategyType strategyType, Type type) {
+    public List<Order> getPending(TriageStrategyType strategyType, OrderType orderType) {
         switch (strategyType) {
             case LOAD_BALANCING -> {
-                return new LoadBalancing().getSortedOrders(type);
+                return new LoadBalancing().getSortedOrders(orderType);
             }
             case DEADLINE_FIRST -> {
-                return new DeadlineFirst().getSortedOrders(type);
+                return new DeadlineFirst().getSortedOrders(orderType);
             }
             case PRIORITY_FIRST -> {
-                return new PriorityFirst().getSortedOrders(type);
+                return new PriorityFirst().getSortedOrders(orderType);
             }
         }
         return new ArrayList<Order>();
@@ -35,10 +35,10 @@ public class TriagingEngine {
     private class PriorityFirst implements TriageStrategy {
 
         @Override
-        public List<Order> getSortedOrders(Type type) {
+        public List<Order> getSortedOrders(OrderType orderType) {
             List<Order> orders = new ArrayList<>();
             for (Priority priority : Priority.values()) {
-                orders.addAll(orderAccess.getPendingOrdersByPriorityAndType(priority, type));
+                orders.addAll(orderAccess.getPendingOrdersByPriorityAndType(priority, orderType));
             }
             return orders;
         }
@@ -47,16 +47,16 @@ public class TriagingEngine {
     private class LoadBalancing implements TriageStrategy {
 
         @Override
-        public List<Order> getSortedOrders(Type type) {
-            return orderAccess.getPendingOrdersByType(type);
+        public List<Order> getSortedOrders(OrderType orderType) {
+            return orderAccess.getPendingOrdersByType(orderType);
         }
     }
 
     private class DeadlineFirst implements TriageStrategy {
 
         @Override
-        public List<Order> getSortedOrders(Type type) {
-            return orderAccess.getPendingOrdersByDeadlineAndType(type);
+        public List<Order> getSortedOrders(OrderType orderType) {
+            return orderAccess.getPendingOrdersByDeadlineAndType(orderType);
         }
     }
 }

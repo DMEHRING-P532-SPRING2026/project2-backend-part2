@@ -26,9 +26,27 @@ public class OrderExceptions {
     }
   }
 
-  public static class OrderActorException extends RuntimeException {
-    public OrderActorException(Long id) {
-      super("Actor on order is not same requester on order: " + id);
+  public static class OrderStaffNotSameAsRequesterException extends RuntimeException {
+    public OrderStaffNotSameAsRequesterException(Long id) {
+      super("Staff members on order does not match requester editing order for id: " + id);
+    }
+  }
+
+  public static class UnknownStaffException extends RuntimeException {
+    public UnknownStaffException(Long id) {
+      super("Staff member with given id is not known: " + id);
+    }
+  }
+
+  public static class NonClinicianCreateOrderException extends RuntimeException {
+    public NonClinicianCreateOrderException(Long id) {
+      super("Staff member is not a clinician trying to create order: " + id);
+    }
+  }
+
+  public static class NonOwnerClinicianCancelOrderException extends RuntimeException {
+    public NonOwnerClinicianCancelOrderException(Long id) {
+      super("Staff member did not create order and is trying to cancel it: " + id);
     }
   }
 

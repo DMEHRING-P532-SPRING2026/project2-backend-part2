@@ -4,8 +4,7 @@ import iu.devinmehringer.project2.controller.OrderExceptions;
 import iu.devinmehringer.project2.model.order.Order;
 import iu.devinmehringer.project2.model.order.Priority;
 import iu.devinmehringer.project2.model.order.Status;
-import iu.devinmehringer.project2.model.order.Type;
-import org.aspectj.weaver.ast.Or;
+import iu.devinmehringer.project2.model.order.OrderType;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -30,20 +29,20 @@ public class OrderAccess {
                 .orElseThrow(() -> new OrderExceptions.OrderNotFoundException(id));
     }
 
-    public List<Order> getPendingOrdersByType(Type type) {
-        return orderRepository.findByTypeOrderByCreatedAtAsc(type);
+    public List<Order> getPendingOrdersByType(OrderType orderType) {
+        return orderRepository.findByOrderTypeOrderByCreatedAtAsc(orderType);
     }
 
-    public List<Order> getPendingOrdersByPriorityAndType(Priority priority, Type type) {
-        return orderRepository.findByStatusAndPriorityAndTypeOrderByCreatedAtAsc(Status.PENDING, priority, type);
+    public List<Order> getPendingOrdersByPriorityAndType(Priority priority, OrderType orderType) {
+        return orderRepository.findByStatusAndPriorityAndOrderTypeOrderByCreatedAtAsc(Status.PENDING, priority, orderType);
     }
 
-    public List<Order> getPendingOrdersByDeadlineAndType(Type type) {
-        return orderRepository.findByTypeOrderByDeadlineAsc(type);
+    public List<Order> getPendingOrdersByDeadlineAndType(OrderType orderType) {
+        return orderRepository.findByOrderTypeOrderByDeadlineAsc(orderType);
     }
 
-    public List<Order> getRecentStatOrders(Type type, LocalDateTime since) {
-        return orderRepository.findByCreatedAtAfterAndPriorityAndType(since, Priority.STAT, type);
+    public List<Order> getRecentStatOrders(OrderType orderType, LocalDateTime since) {
+        return orderRepository.findByCreatedAtAfterAndPriorityAndOrderType(since, Priority.STAT, orderType);
     }
 
 }

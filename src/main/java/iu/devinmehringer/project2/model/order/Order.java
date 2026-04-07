@@ -1,8 +1,11 @@
 package iu.devinmehringer.project2.model.order;
 
+import iu.devinmehringer.project2.model.staff.Staff;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
@@ -13,29 +16,36 @@ public class Order {
     private Long id;
 
     @Enumerated(EnumType.STRING)
-    private Type type;
+    private OrderType orderType;
     private String patient;
-    private String clinician;
     private String description;
     @Enumerated(EnumType.STRING)
     private Priority priority;
     @Enumerated(EnumType.STRING)
     private Status status;
-    private String currentActor;
     private LocalDateTime createdAt;
     private LocalDateTime lastModifiedAt;
     private LocalDateTime deadline;
+    @ManyToMany
+    @JoinTable(
+            name = "order_staff",
+            joinColumns = @JoinColumn(name = "order_id"),
+            inverseJoinColumns = @JoinColumn(name = "staff_id")
+    )
+    private List<Staff> staff;
+
 
     protected Order() {}
 
-    public Order(Type type, String patient, String clinician, String description, Priority priority, Status status, LocalDateTime createdAt) {
-        this.type = type;
+    public Order(OrderType orderType, String patient, String description, Priority priority, Status status, LocalDateTime createdAt, Staff staff) {
+        this.orderType = orderType;
         this.patient = patient;
-        this.clinician = clinician;
         this.description = description;
         this.priority = priority;
         this.status = status;
         this.createdAt = createdAt;
+        this.staff = new ArrayList<>();
+        this.staff.add(staff);
     }
 
     public LocalDateTime getLastModifiedAt() {
@@ -78,14 +88,6 @@ public class Order {
         this.description = description;
     }
 
-    public String getClinician() {
-        return clinician;
-    }
-
-    public void setClinician(String clinician) {
-        this.clinician = clinician;
-    }
-
     public String getPatient() {
         return patient;
     }
@@ -94,12 +96,12 @@ public class Order {
         this.patient = patient;
     }
 
-    public Type getType() {
-        return type;
+    public OrderType getType() {
+        return orderType;
     }
 
-    public void setType(Type type) {
-        this.type = type;
+    public void setType(OrderType orderType) {
+        this.orderType = orderType;
     }
 
     public Long getId() {
@@ -110,13 +112,6 @@ public class Order {
         this.id = id;
     }
 
-    public String getCurrentActor() {
-        return currentActor;
-    }
-
-    public void setCurrentActor(String currentActor) {
-        this.currentActor = currentActor;
-    }
 
     public LocalDateTime getDeadline() {
         return deadline;
@@ -126,20 +121,43 @@ public class Order {
         this.deadline = deadline;
     }
 
+    public OrderType getOrderType() {
+        return orderType;
+    }
+
+    public void setOrderType(OrderType orderType) {
+        this.orderType = orderType;
+    }
+
+    public List<Staff> getStaff() {
+        return staff;
+    }
+
+    public void setStaff(List<Staff> staff) {
+        this.staff = staff;
+    }
+
+    public void addStaff(Staff staff) {
+        this.staff.add(staff);
+    }
+
+    public void removeStaff(Staff staff) {
+        this.staff.remove(staff);
+    }
+
     @Override
     public String toString() {
         return "Order{" +
                 "id=" + id +
-                ", type=" + type +
+                ", orderType=" + orderType +
                 ", patient='" + patient + '\'' +
-                ", clinician='" + clinician + '\'' +
                 ", description='" + description + '\'' +
                 ", priority=" + priority +
                 ", status=" + status +
-                ", currentActor='" + currentActor + '\'' +
                 ", createdAt=" + createdAt +
                 ", lastModifiedAt=" + lastModifiedAt +
                 ", deadline=" + deadline +
+                ", staff=" + staff +
                 '}';
     }
 }

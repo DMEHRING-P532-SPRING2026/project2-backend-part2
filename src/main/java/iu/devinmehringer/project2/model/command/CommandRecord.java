@@ -1,5 +1,6 @@
 package iu.devinmehringer.project2.model.command;
 
+import iu.devinmehringer.project2.model.staff.Staff;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -13,18 +14,21 @@ public class CommandRecord {
 
     private LocalDateTime executedAt;
     @Enumerated(EnumType.STRING)
-    private Type type;
+    private CommandType commandType;
     @Column(name = "order_id")
     private Long orderId;
-    private String actor;
+
+    @ManyToOne
+    @JoinColumn(name = "staff_id")
+    private Staff staff;
     private String other;
 
     protected CommandRecord() {}
 
-    public CommandRecord(Type type, Long orderId, String actor, String other) {
-        this.type = type;
+    public CommandRecord(CommandType commandType, Long orderId, Staff staff, String other) {
+        this.commandType = commandType;
         this.orderId = orderId;
-        this.actor = actor;
+        this.staff = staff;
         this.executedAt = LocalDateTime.now();
         this.other = other;
     }
@@ -45,12 +49,12 @@ public class CommandRecord {
         this.executedAt = executedAt;
     }
 
-    public Type getType() {
-        return type;
+    public CommandType getType() {
+        return commandType;
     }
 
-    public void setType(Type type) {
-        this.type = type;
+    public void setType(CommandType commandType) {
+        this.commandType = commandType;
     }
 
     public Long getOrderId() {
@@ -61,12 +65,20 @@ public class CommandRecord {
         this.orderId = orderId;
     }
 
-    public String getActor() {
-        return actor;
+    public CommandType getCommandType() {
+        return commandType;
     }
 
-    public void setActor(String actor) {
-        this.actor = actor;
+    public void setCommandType(CommandType commandType) {
+        this.commandType = commandType;
+    }
+
+    public Staff getStaff() {
+        return staff;
+    }
+
+    public void setStaff(Staff staff) {
+        this.staff = staff;
     }
 
     public String getOther() {
