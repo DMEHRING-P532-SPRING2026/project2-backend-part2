@@ -13,6 +13,6 @@ public class MedicationOrder extends Order {
     public MedicationOrder() {}
 
     public MedicationOrder(String patient, Staff staff, String description, Priority priority) {
-        super(OrderType.MEDICATION, patient, description, priority, Status.PENDING, LocalDateTime.now(), staff);
+        super(Department.MEDICATION, patient, description, priority, Status.PENDING, LocalDateTime.now(), staff);
     }
 }

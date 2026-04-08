@@ -13,6 +13,6 @@ public class LabOrder extends Order {
     protected LabOrder() {}
 
     public LabOrder(String patient, Staff staff, String description, Priority priority) {
-        super(OrderType.LAB, patient, description, priority, Status.PENDING, LocalDateTime.now(), staff);
+        super(Department.LAB, patient, description, priority, Status.PENDING, LocalDateTime.now(), staff);
     }
 }

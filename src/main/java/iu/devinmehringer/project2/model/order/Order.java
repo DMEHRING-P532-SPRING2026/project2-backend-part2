@@ -16,7 +16,7 @@ public class Order {
     private Long id;
 
     @Enumerated(EnumType.STRING)
-    private OrderType orderType;
+    private Department department;
     private String patient;
     private String description;
     @Enumerated(EnumType.STRING)
@@ -37,8 +37,8 @@ public class Order {
 
     protected Order() {}
 
-    public Order(OrderType orderType, String patient, String description, Priority priority, Status status, LocalDateTime createdAt, Staff staff) {
-        this.orderType = orderType;
+    public Order(Department department, String patient, String description, Priority priority, Status status, LocalDateTime createdAt, Staff staff) {
+        this.department = department;
         this.patient = patient;
         this.description = description;
         this.priority = priority;
@@ -96,12 +96,12 @@ public class Order {
         this.patient = patient;
     }
 
-    public OrderType getType() {
-        return orderType;
+    public Department getType() {
+        return department;
     }
 
-    public void setType(OrderType orderType) {
-        this.orderType = orderType;
+    public void setType(Department department) {
+        this.department = department;
     }
 
     public Long getId() {
@@ -121,14 +121,6 @@ public class Order {
         this.deadline = deadline;
     }
 
-    public OrderType getOrderType() {
-        return orderType;
-    }
-
-    public void setOrderType(OrderType orderType) {
-        this.orderType = orderType;
-    }
-
     public List<Staff> getStaff() {
         return staff;
     }
@@ -145,11 +137,19 @@ public class Order {
         this.staff.remove(staff);
     }
 
+    public Department getDepartment() {
+        return department;
+    }
+
+    public void setDepartment(Department department) {
+        this.department = department;
+    }
+
     @Override
     public String toString() {
         return "Order{" +
                 "id=" + id +
-                ", orderType=" + orderType +
+                ", department=" + department +
                 ", patient='" + patient + '\'' +
                 ", description='" + description + '\'' +
                 ", priority=" + priority +

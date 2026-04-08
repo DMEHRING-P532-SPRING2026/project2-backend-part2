@@ -1,5 +1,6 @@
 package iu.devinmehringer.project2.model.staff;
 
+import iu.devinmehringer.project2.model.order.Department;
 import iu.devinmehringer.project2.model.order.Order;
 import jakarta.persistence.*;
 
@@ -16,14 +17,20 @@ public class Staff {
     @Enumerated(EnumType.STRING)
     private StaffType type;
 
+    @Enumerated(EnumType.STRING)
+    private Department department;
+
     @ManyToMany(mappedBy = "staff")
     private List<Order> orders;
 
-    private Staff() {}
+    protected Staff() {}
 
-    public Staff(String name, StaffType type) {
+    public Staff(String name, StaffType type, Department department) {
         this.name = name;
         this.type = type;
+        if (department != null) {
+            this.department = department;
+        }
     }
 
 
@@ -57,6 +64,14 @@ public class Staff {
 
     public void setOrders(List<Order> orders) {
         this.orders = orders;
+    }
+
+    public Department getDepartment() {
+        return department;
+    }
+
+    public void setDepartment(Department department) {
+        this.department = department;
     }
 
     @Override

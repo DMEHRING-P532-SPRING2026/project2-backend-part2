@@ -7,16 +7,21 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class EmailNotifier implements NotificationService {
+
     @Override
-    public void notify(Order order, String event) {
+    public void sendNotification(Order order, String event) {
         for (Staff staff : order.getStaff()) {
-            System.out.println(staff.getName().split(" ")[0] +
-                    "@example.com: Your order: " + order + " has been processed for event: " + event);
+            String email = staff.getName().trim().toLowerCase()
+                    .replaceAll("^dr\\.\\s*", "")
+                    .replace(" ", ".") + "@example.com";
+            System.out.println(email + ": Order #" + order.getId() +
+                    " for patient " + order.getPatient() +
+                    " has been processed for event: " + event);
         }
     }
 
     @Override
     public void update(OrderCommand command, String event) {
-        this.notify(command.getOrder(), event);
+        this.sendNotification(command.getOrder(), event);
     }
 }

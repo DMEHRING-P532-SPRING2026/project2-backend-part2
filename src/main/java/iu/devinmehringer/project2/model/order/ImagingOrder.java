@@ -13,6 +13,6 @@ public class ImagingOrder extends Order {
     protected ImagingOrder() {}
 
     public ImagingOrder(String patient, Staff staff, String description, Priority priority) {
-        super(OrderType.IMAGING, patient, description, priority, Status.PENDING, LocalDateTime.now(), staff);
+        super(Department.IMAGING, patient, description, priority, Status.PENDING, LocalDateTime.now(), staff);
     }
 }

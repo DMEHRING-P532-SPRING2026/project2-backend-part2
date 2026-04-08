@@ -28,10 +28,11 @@ public class BadgeController {
         return emitter;
     }
 
-    public void pushBadgeUpdate(Order order, String event, String actor) {
+    public void pushBadgeUpdate(Order order, String event, Long staffId) {
+        System.out.println("Pushing badge update, emitters count: " + emitters.size() + ", actorId: " + staffId);
         emitters.forEach(emitter -> {
             try {
-                emitter.send(SseEmitter.event().data(event));
+                emitter.send(SseEmitter.event().data(staffId));
             } catch (IOException e) {
                 emitters.remove(emitter);
             }

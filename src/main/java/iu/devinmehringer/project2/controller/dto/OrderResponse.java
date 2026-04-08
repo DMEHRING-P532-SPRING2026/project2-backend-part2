@@ -2,28 +2,28 @@ package iu.devinmehringer.project2.controller.dto;
 
 import iu.devinmehringer.project2.model.order.Priority;
 import iu.devinmehringer.project2.model.order.Status;
-import iu.devinmehringer.project2.model.order.OrderType;
+import iu.devinmehringer.project2.model.order.Department;
 
 import java.time.LocalDateTime;
 
 public class OrderResponse {
     private long id;
-    private OrderType orderType;
+    private Department department;
     private String patient;
-    private String clinician;
     private String description;
     private Priority priority;
     private Status status;
     private LocalDateTime createdAt;
     private LocalDateTime lastModifiedAt;
     private LocalDateTime deadline;
+    private String clinician;
 
-    public OrderType getType() {
-        return orderType;
+    public Department getType() {
+        return department;
     }
 
-    public void setType(OrderType orderType) {
-        this.orderType = orderType;
+    public void setType(Department department) {
+        this.department = department;
     }
 
     public String getPatient() {
@@ -32,14 +32,6 @@ public class OrderResponse {
 
     public void setPatient(String patient) {
         this.patient = patient;
-    }
-
-    public String getClinician() {
-        return clinician;
-    }
-
-    public void setClinician(String clinician) {
-        this.clinician = clinician;
     }
 
     public String getDescription() {
@@ -96,5 +88,21 @@ public class OrderResponse {
 
     public void setDeadline(LocalDateTime deadline) {
         this.deadline = deadline;
+    }
+
+    public Department getDepartment() {
+        return department;
+    }
+
+    public void setDepartment(Department department) {
+        this.department = department;
+    }
+
+    public String getClinician() {
+        return clinician;
+    }
+
+    public void setClinician(String clinician) {
+        this.clinician = clinician;
     }
 }

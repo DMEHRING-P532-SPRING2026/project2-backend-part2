@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Table(name="commands")
 public class CommandRecord {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private LocalDateTime executedAt;
@@ -18,7 +18,7 @@ public class CommandRecord {
     @Column(name = "order_id")
     private Long orderId;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "staff_id")
     private Staff staff;
     private String other;

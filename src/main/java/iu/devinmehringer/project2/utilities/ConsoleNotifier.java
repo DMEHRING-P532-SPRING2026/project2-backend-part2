@@ -8,15 +8,17 @@ import org.springframework.stereotype.Component;
 @Component
 public class ConsoleNotifier implements NotificationService {
     @Override
-    public void notify(Order order, String event) {
+    public void sendNotification(Order order, String event) {
         for (Staff staff : order.getStaff()) {
-            System.out.println("Staff: " + staff +
-                    ", notified about order: " + order + " for event: " + event);
+            System.out.println("Staff: " + staff.getName() +
+                    ", notified about order #" + order.getId() +
+                    " (patient: " + order.getPatient() + ")" +
+                    " for event: " + event);
         }
     }
 
     @Override
     public void update(OrderCommand command, String event) {
-        this.notify(command.getOrder(), event);
+        this.sendNotification(command.getOrder(), event);
     }
 }

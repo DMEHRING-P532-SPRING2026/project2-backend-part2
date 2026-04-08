@@ -21,4 +21,8 @@ public class CommandAccess {
         return commandRepository.findAll();
     }
 
+    public CommandRecord getCommandById(Long id) {
+        return commandRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Command not found: " + id));
+    }
 }

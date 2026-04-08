@@ -1,23 +1,23 @@
 package iu.devinmehringer.project2.controller.dto;
 
+import iu.devinmehringer.project2.model.order.Department;
 import iu.devinmehringer.project2.model.order.Priority;
-import iu.devinmehringer.project2.model.order.OrderType;
 import iu.devinmehringer.project2.utilities.NotificationPreferences;
 
 public class OrderRequest {
-    private OrderType orderType;
+    private Department department;
     private String patient;
     private String description;
     private Priority priority;
     private Long staffId;
     private NotificationPreferences preferences;
 
-    public OrderType getType() {
-        return orderType;
+    public Department getType() {
+        return department;
     }
 
-    public void setType(OrderType orderType) {
-        this.orderType = orderType;
+    public void setType(Department department) {
+        this.department = department;
     }
 
     public String getPatient() { return patient; }
@@ -46,14 +46,6 @@ public class OrderRequest {
 
     public void setPreferences(NotificationPreferences preferences) {
         this.preferences = preferences;
-    }
-
-    public OrderType getOrderType() {
-        return orderType;
-    }
-
-    public void setOrderType(OrderType orderType) {
-        this.orderType = orderType;
     }
 
     public Long getStaffId() {

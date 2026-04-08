@@ -7,8 +7,8 @@ import iu.devinmehringer.project2.controller.OrderExceptions;
 import iu.devinmehringer.project2.controller.dto.OrderRequest;
 import iu.devinmehringer.project2.model.command.CommandRecord;
 import iu.devinmehringer.project2.model.command.CommandType;
+import iu.devinmehringer.project2.model.order.Department;
 import iu.devinmehringer.project2.model.order.Order;
-import iu.devinmehringer.project2.model.order.OrderType;
 import iu.devinmehringer.project2.model.order.Priority;
 import iu.devinmehringer.project2.model.order.Status;
 import iu.devinmehringer.project2.model.staff.Staff;
@@ -31,6 +31,8 @@ public class OrderManager implements Subject {
     private final TriagingEngine triagingEngine;
     private final List<NotificationService> notifiers;
 
+    private OrderCommand lastCommand;
+
     public OrderManager(OrderFactory orderFactory, OrderAccess orderAccess, StaffAccess staffAccess,
                         CommandAccess commandAccess, TriagingEngine triagingEngine,
                         List<NotificationService> notifiers) {
@@ -41,16 +43,13 @@ public class OrderManager implements Subject {
         this.triagingEngine = triagingEngine;
         this.notifiers = notifiers;
         commandPipeline = new ValidationHandler(
-                                new PriorityEscalationHandler(
-                                        new NotificationHandler(
-                                                new CommandLoggerHandler(
-                                                        new BaseHandler()
-                                                ))));
+                new PriorityEscalationHandler(
+                        new NotificationHandler(
+                                new CommandLoggerHandler(
+                                        new BaseHandler()
+                                ))));
     }
 
-    /**
-     * Base Handler - execute the given command
-     */
     private static class BaseHandler implements Handler {
         @Override
         public void handle(OrderCommand command) {
@@ -58,14 +57,8 @@ public class OrderManager implements Subject {
         }
     }
 
-    /**
-     * Notification Handler - used to notifier the observers
-     */
     private class NotificationHandler extends HandlerDecorator {
-
-        public NotificationHandler(Handler handler) {
-            super(handler);
-        }
+        public NotificationHandler(Handler handler) { super(handler); }
 
         @Override
         public void handle(OrderCommand command) {
@@ -74,14 +67,8 @@ public class OrderManager implements Subject {
         }
     }
 
-    /**
-     * Command Logger Handler - saves the commands for reference
-     */
     private class CommandLoggerHandler extends HandlerDecorator {
-
-        public CommandLoggerHandler(Handler handler) {
-            super(handler);
-        }
+        public CommandLoggerHandler(Handler handler) { super(handler); }
 
         @Override
         public void handle(OrderCommand command) {
@@ -89,34 +76,23 @@ public class OrderManager implements Subject {
             Order order = command.getOrder();
             String other = order.getPriority() == Priority.STAT
                     ? String.format("STAT AUDIT | Patient: %s | CommandType: %s", order.getPatient(), order.getType())
-                    : null;
-
+                    : String.format("patient=%s|description=%s|department=%s|priority=%s",
+                    order.getPatient(), order.getDescription(), order.getDepartment(), order.getPriority());
             commandAccess.saveCommand(new CommandRecord(command.getType(), order.getId(), command.getStaff(), other));
         }
     }
 
-    /**
-     * Escalate Orders
-     */
     private class PriorityEscalationHandler extends HandlerDecorator {
-
-        public PriorityEscalationHandler(Handler handler) {
-            super(handler);
-        }
+        public PriorityEscalationHandler(Handler handler) { super(handler); }
 
         @Override
         public void handle(OrderCommand command) {
             super.handle(command);
-
             if (!command.getType().equals(CommandType.CREATE)) return;
-
             Order order = command.getOrder();
-
             if (order.getPriority() != Priority.URGENT) return;
-
             List<Order> recentStats = orderAccess.getRecentStatOrders(order.getType(),
                     LocalDateTime.now().minusMinutes(5));
-
             if (!recentStats.isEmpty()) {
                 order.setPriority(Priority.STAT);
                 order.setDeadline(LocalDateTime.now().plusMinutes(30));
@@ -125,16 +101,8 @@ public class OrderManager implements Subject {
         }
     }
 
-
-
-    /**
-     * Validation Handler - validate request
-     */
     private class ValidationHandler extends HandlerDecorator {
-
-        public ValidationHandler(Handler handler) {
-            super(handler);
-        }
+        public ValidationHandler(Handler handler) { super(handler); }
 
         private void validateRequester(List<Staff> orderStaff, Staff requester) {
             if (!orderStaff.contains(requester)) {
@@ -146,7 +114,6 @@ public class OrderManager implements Subject {
             Order order = orderAccess.getOrderById(command.getId());
             command.setOrder(order);
             command.setId(order.getId());
-            validateRequester(order.getStaff(), command.getStaff());
             if (!command.getOrder().getStatus().equals(Status.PENDING)) {
                 throw new OrderExceptions.OrderClaimException(command.getId());
             }
@@ -156,15 +123,8 @@ public class OrderManager implements Subject {
             Order order = orderAccess.getOrderById(command.getId());
             command.setOrder(order);
             command.setId(order.getId());
-            validateRequester(order.getStaff(), command.getStaff());
-            // Must be in the order staff at this point but if requester is not a clinician
-            // then must not be the creator since order has one clinician (in this model)
             if (!command.getStaff().getType().equals(StaffType.CLINICIAN)) {
                 throw new OrderExceptions.NonOwnerClinicianCancelOrderException(command.getStaffId());
-            }
-
-            if (!command.getOrder().getStatus().equals(Status.PENDING)) {
-                throw new OrderExceptions.OrderCancelException(command.getId());
             }
         }
 
@@ -186,7 +146,6 @@ public class OrderManager implements Subject {
 
         @Override
         public void handle(OrderCommand command) {
-            // First check if the staff exists
             Staff staff = staffAccess.getStaffFromID(command.getStaffId());
             if (staff != null) {
                 command.setStaff(staff);
@@ -199,21 +158,16 @@ public class OrderManager implements Subject {
                 case SUBMIT -> submitCheck(command);
                 case CREATE -> createCheck(command);
             }
+            command.savePreviousState();
             super.handle(command);
         }
     }
 
-    /**
-     * Create Order command
-     * @param orderRequest data from controller about order
-     * @return Order
-     */
     public Order createOrder(OrderRequest orderRequest) {
         OrderCommand command = new OrderCommand() {
             @Override
             public void execute() {
                 Staff staff = staffAccess.getStaffFromID(orderRequest.getStaffId());
-
                 this.order = orderFactory.create(
                         orderRequest.getType(),
                         orderRequest.getPatient(),
@@ -235,15 +189,10 @@ public class OrderManager implements Subject {
         command.setEvent("Create Order");
         command.setType(CommandType.CREATE);
         commandPipeline.handle(command);
+        lastCommand = command;
         return command.getOrder();
     }
 
-    /**
-     * Claim order command
-     * @param id the id of the order
-     * @param orderRequest controller request
-     * @return Order
-     */
     public Order claimOrder(Long id, OrderRequest orderRequest) {
         OrderCommand command = new OrderCommand() {
             @Override
@@ -252,6 +201,7 @@ public class OrderManager implements Subject {
                 this.order.addStaff(staff);
                 this.order.setStatus(Status.IN_PROGRESS);
                 order.setLastModifiedAt(LocalDateTime.now());
+                orderAccess.saveOrder(order);
             }
         };
         command.setStaffId(orderRequest.getStaffId());
@@ -260,21 +210,17 @@ public class OrderManager implements Subject {
         command.setType(CommandType.CLAIM);
         command.setId(id);
         commandPipeline.handle(command);
+        lastCommand = command;
         return command.getOrder();
     }
 
-    /**
-     * Cancel order command
-     * @param id the id of the order
-     * @param orderRequest controller request
-     * @return Order
-     */
     public Order cancelOrder(Long id, OrderRequest orderRequest) {
         OrderCommand command = new OrderCommand() {
             @Override
             public void execute() {
                 this.order.setStatus(Status.CANCELLED);
                 order.setLastModifiedAt(LocalDateTime.now());
+                orderAccess.saveOrder(order);
             }
         };
         command.setStaffId(orderRequest.getStaffId());
@@ -283,21 +229,17 @@ public class OrderManager implements Subject {
         command.setType(CommandType.CANCEL);
         command.setId(id);
         commandPipeline.handle(command);
+        lastCommand = command;
         return command.getOrder();
     }
 
-    /**
-     * Submit order command
-     * @param id the id of the order
-     * @param orderRequest controller request
-     * @return Order
-     */
     public Order submitOrder(Long id, OrderRequest orderRequest) {
         OrderCommand command = new OrderCommand() {
             @Override
             public void execute() {
                 this.order.setStatus(Status.COMPLETED);
                 order.setLastModifiedAt(LocalDateTime.now());
+                orderAccess.saveOrder(order);
             }
         };
         command.setStaffId(orderRequest.getStaffId());
@@ -306,12 +248,75 @@ public class OrderManager implements Subject {
         command.setType(CommandType.SUBMIT);
         command.setId(id);
         commandPipeline.handle(command);
+        lastCommand = command;
         return command.getOrder();
     }
 
-    public List<Order> getPendingOrders(TriageStrategyType triageStrategy,
-                                        OrderType orderType) {
-        return triagingEngine.getPending(triageStrategy, orderType);
+    /**
+     * Undo the last executed command by restoring the previous state snapshot
+     */
+    public Order undoLastCommand() {
+        if (lastCommand == null) {
+            throw new RuntimeException("No command to undo");
+        }
+
+        Order order = lastCommand.getOrder();
+        if (lastCommand.getType() == CommandType.CREATE) {
+            order.setStatus(Status.CANCELLED);
+            order.setLastModifiedAt(LocalDateTime.now());
+            orderAccess.saveOrder(order);
+            commandAccess.saveCommand(new CommandRecord(CommandType.UNDO, order.getId(), lastCommand.getStaff(), "Undo CREATE - order cancelled"));
+            lastCommand = null;
+            return order;
+        }
+
+        order.setStatus(lastCommand.getPreviousStatus());
+        order.setStaff(lastCommand.getPreviousStaff());
+        order.setPriority(lastCommand.getPreviousPriority());
+        order.setDeadline(lastCommand.getPreviousDeadline());
+        order.setLastModifiedAt(LocalDateTime.now());
+        orderAccess.saveOrder(order);
+
+        commandAccess.saveCommand(new CommandRecord(CommandType.UNDO, order.getId(), lastCommand.getStaff(),
+                "Undo " + lastCommand.getType() + " - reverted to " + lastCommand.getPreviousStatus()));
+        lastCommand = null;
+        return order;
+    }
+
+    public Order replayCommand(Long commandRecordId, OrderRequest orderRequest) {
+        CommandRecord record = commandAccess.getCommandById(commandRecordId);
+        return switch (record.getType()) {
+            case CLAIM -> claimOrder(record.getOrderId(), orderRequest);
+            case CANCEL -> cancelOrder(record.getOrderId(), orderRequest);
+            case SUBMIT -> submitOrder(record.getOrderId(), orderRequest);
+            case CREATE -> {
+                Order original = orderAccess.getOrderById(record.getOrderId());
+                OrderRequest createRequest = new OrderRequest();
+                createRequest.setStaffId(record.getStaff().getId());
+                createRequest.setType(original.getDepartment());
+                createRequest.setPatient(original.getPatient());
+                createRequest.setDescription(original.getDescription());
+                createRequest.setPriority(original.getPriority());
+                yield createOrder(createRequest);
+            }
+            case UNDO -> throw new RuntimeException("Cannot replay an UNDO command");
+        };
+    }
+
+    public List<Order> getPendingOrders(Long staffId, TriageStrategyType triageStrategy,
+                                        Department department) {
+        Staff staff = this.staffAccess.getStaffFromID(staffId);
+        return triagingEngine.getPending(staff, triageStrategy, department);
+    }
+
+    public List<Order> getClaimedOrders(Long staffId, Department department) {
+        Staff staff = staffAccess.getStaffFromID(staffId);
+        return orderAccess.getByStaffContainingAndDepartmentAndStatus(staff, department, Status.IN_PROGRESS);
+    }
+
+    public List<Order> getOrdersByClinician(Long staffId) {
+        Staff staff = staffAccess.getStaffFromID(staffId);
+        return orderAccess.findActiveOrdersByClinician(staff);
     }
 
     public List<CommandRecord> getOrderCommands() {
@@ -335,5 +340,4 @@ public class OrderManager implements Subject {
                 .filter(n -> preferences.isEnabled(n.getClass()))
                 .forEach(n -> n.update(command, event));
     }
-
 }

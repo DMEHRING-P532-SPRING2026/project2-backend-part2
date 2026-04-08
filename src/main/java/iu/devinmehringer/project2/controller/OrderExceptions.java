@@ -50,4 +50,10 @@ public class OrderExceptions {
     }
   }
 
+  public static class FulfillmentHasNoDepartmentOnCreationException extends RuntimeException {
+    public FulfillmentHasNoDepartmentOnCreationException() {
+      super("Staff of type fulfillment has not type staff");
+    }
+  }
+
 }
